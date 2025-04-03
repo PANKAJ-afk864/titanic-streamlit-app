@@ -1,27 +1,33 @@
+
 import streamlit as st
 import pandas as pd
+import numpy as np
 import joblib
 
 # Load the trained model
 model = joblib.load("titanic_model.pkl")
 
-# Title
-st.title("🚢 Titanic Survival Prediction")
+st.title("Titanic Survival Prediction")
 
-st.sidebar.header("Enter Passenger Details")
+# User inputs
+Pclass = st.selectbox("Passenger Class", [1, 2, 3])
+Sex = st.selectbox("Sex", ["Male", "Female"])
+Age = st.number_input("Age", min_value=0, max_value=100, value=30)
+SibSp = st.number_input("Siblings/Spouses Aboard", min_value=0, max_value=10, value=0)
+Parch = st.number_input("Parents/Children Aboard", min_value=0, max_value=10, value=0)
+Fare = st.number_input("Fare", min_value=0.0, max_value=500.0, value=50.0)
+Embarked = st.selectbox("Embarked Port", ["C", "Q", "S"])
 
-# User Inputs
-pclass = st.sidebar.selectbox("Passenger Class (1 = First, 2 = Second, 3 = Third)", [1, 2, 3])
-sex = st.sidebar.radio("Sex", ["Male", "Female"])
-age = st.sidebar.slider("Age", 1, 100, 30)
-fare = st.sidebar.slider("Fare", 0, 500, 50)
-
-# Convert Inputs
-sex = 1 if sex == "Female" else 0
-features = pd.DataFrame([[pclass, sex, age, fare]], columns=['Pclass', 'Sex', 'Age', 'Fare'])
+# Convert categorical inputs to numerical values
+Sex = 0 if Sex == "Male" else 1
+Embarked = {"C": 0, "Q": 1, "S": 2}[Embarked]
 
 # Prediction
-if st.sidebar.button("Predict"):
-    prediction = model.predict(features.values.reshape(1, -1))[0]
-    result = "Survived 😊" if prediction == 1 else "Did NOT Survive 😢"
-    st.subheader(f"Prediction: {result}")
+if st.button("Predict Survival"):
+    features = np.array([[Pclass, Sex, Age, SibSp, Parch, Fare, Embarked]])
+    prediction = model.predict(features)[0]
+
+    if prediction == 1:
+        st.success("The passenger is likely to survive. ✅")
+    else:
+        st.error("The passenger is unlikely to survive. ❌")
